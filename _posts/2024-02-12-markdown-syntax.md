@@ -1,6 +1,7 @@
 ---
 layout: single
 title:  "[Makrdown] 깃헙페이지 포스팅을 위한 마크다운 기초 문법 정리"
+excerpt: "마크다운 문법을 알아보자"
 tags:
   - Markdown
 ---
