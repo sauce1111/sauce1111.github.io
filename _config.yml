@@ -114,7 +114,7 @@ analytics:
 # Site Author
 author:
   name             : "박선서"
-  avatar           : "/assets/images/profile/resume.jpg"
+  avatar           : "assets/images/profile/picture.jpeg"
   bio              : "안녕하세요. 백엔드 개발자 박선서 입니다."
   location         : "SEOUL"
   email            : "sauce0127@gmail.com"
