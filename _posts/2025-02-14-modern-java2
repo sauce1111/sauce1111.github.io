@@ -1,0 +1,189 @@
+# CHAPTER 2 동작 파라미터화 코드 전달하기
+
+---
+
+> 동작 파라미터화 란 ? 
+어떻게 실행할 것인지 결정 되지 않은 코드 블록을 의미한다.
+따라서 계속해서 바뀌는 요구사항에 효과적으로 대응 할 수 있다.
+> 
+
+## 변화하는 요구사항에 대응하기
+
+---
+
+※ 농부의 사과 분류 예제
+
+1. 사과의 색 별로 분류하여 List의 담고 싶을 경우 (분류 조건에 색깔만 다른 거의 같은 코드)
+    
+    → 추상화 할 수 있다 : 반복 코드 발생
+    
+2. 사과의 색깔을 인자로 받아 분류 조건으로 사용 (색깔이라는 파라미터를 넘겨받아 반복 코드 문제 해결)
+→ 파라미터화 : 분류 조건 추가 시 반복 코드 발생
+3. 색깔(color) 외 다른 분류 조건(무게, 크기 등)이 추가 될 경우 분류(filter 메소드)에 추가 되는 모든 기준을
+전부 파라미터로 전달한다 
+→ 명확하지 않고, 지저분한 코드가 된다.
+
+## 동작 파라미터화
+
+---
+
+위에서 사과 분류의 사례에서 기준을 간소화 하면 (색깔, 무게 등등은 잠시 잊고)
+기준에 부합 하는지 (true) 아닌지 (false) 일 것이다. 참 또는 거짓을 반환 하는 함수를 **프레디케이트** 라 한다. 
+
+예제 2-1
+
+```basic
+// 선택 조건을 결정하는 인터페이스
+public interface ApplePredicate {
+		boolean test(Apple apple);
+}
+
+// 무게가 150 보다 큰 사과만 분류
+public class AppleHeavyWeightPredicate implements ApplePredicate {
+		public boolean test(Apple apple) {
+				return apple.getWeight() > 150;
+		}
+}
+
+// 녹색 사과만 분류
+public class AppleGreenColorPredicate implements ApplePredicate {
+		public boolean test(Apple apple) {
+				return GREEN.equals(apple.getColor());
+		}
+}
+```
+
+위 예제에서 분류 기준을 캡슐화 했다. 이 ApplePredicate 객체를 
+
+다시 농부의 변화하는 요구조건에 대응하는 분류(filter 메소드) 에서 파라미터로 받도록 함으로 
+
+동작 파라미터화 할 수 있다. 다시 말해 메소드, 동작방식 또는 전략을 파라미터로 받아 어떻게 실행할 것인지 결정 되지 않은 코드 블록을 내부적으로 다양한 동작을 수행 할 수 있도록 할 수 있다.
+
+해당 filter 코드는 아래 와 같다.
+
+예제 2-2
+
+```basic
+// 이제 새로 추가되는 기준별로 ApplePredicate 를 구현한 클래스를 만들어
+// filterApples 의 파라미터 p 로 넘겨 주면 된다.
+public statcic List<Apple> filterApples(List<Apple> inventory, 
+				ApplePredicate p) {
+		List<Apple> result = new ArrayList<>();
+		for (Apple apple : inventory) {
+				if (p.test(apple)) {
+						result.add(apple);
+				}
+		}
+		result result;
+}
+```
+
+예제 2-2 를 사용하여 사과의 색은 RED 이고 크기는 10CM 이상 인 사과를 분류하는 코드와 호출 방법이다.
+
+예제2-3
+
+```basic
+// 색깔은 RED 이고 크기가 10 이상 의 조건의 값을 반환
+public class AppleRedAndSizePredicate implements ApplePredicate {
+		public boolean test(Apple apple) {
+				return RED.equals(apple.getColor());
+								&& apple.getSize() > 10;
+		}
+}
+
+// 호출
+List<Apple> redAndSizeApples = 
+				filterApples(inventory, new AppleRedAndSizePredicate());
+```
+
+## 복잡한 과정 간소화
+
+위에서 동작 파라미터화 를 통한 사과 필터링 코드에서 클래스를 분류 기준이 추가 될 때마다 ApplePredicate 를
+
+구현하는 클래스를 반복적으로 생성해야 한다.
+
+여기서 간소화를 위해 클래스의 선언과 인스턴스화를 동시에 수행할 수 있도록 **익명 클래스** 기법을 사용할 수 있다.
+
+색깔이 "RED" 인 Apple 을 반환하는 코드
+
+예제 2-4
+
+```basic
+List<Apple> redApple = fileterApples(inventory, new ApplePredicate() {
+		public boolean test(Apple apple) {
+				return RED.equals(apple.getColor());
+		]
+});
+```
+
+ 
+
+위 코드로 익명 클래스를 사용하여도 여전히 긴 코드양 과 분류 별로 매번 반복 생성 함으로 지저분한 코드이다.
+
+자바 8 에서는 람다 표현식 이라는 기법을 도입하여 이같은 문제를 해결 한다.
+
+예제 2-4 를 람다 표현식으로 구현 하면 아래와 같이 간결하게 재구현 할 수 있다.
+
+예제 2-5
+
+```basic
+List<Apple> result = filterApples(inventory,
+				(Apple apple) -> RED.equals(apple.getColor()));
+
+```
+
+## 리스트 형식으로 추상화
+
+사과필터링 예제를 통해 동작 파라미터를 사용해 보았듯이 이를 응용하여 Apple 외의 
+다른 객체타입의 리스트 역시 필터 메소드를 사용 할 수 있다.
+
+예제 2-6
+
+```basic
+public interface Predicate<T> {
+		boolean test(T t);
+}
+
+public static <T> List<T> filter(List<T> list, Predicate<T> p) {
+		List<T> result = new ArrayList<>();
+		for (T e : list) {
+				if (p.test(e)) {
+						result.add(e);
+				}
+		}
+		return result;
+}
+
+List<Integer> evenNumbers = filter(numbers, (Integer i) -> i % 2 == 0);
+```
+
+## 실전 예제
+
+1. Comparator 로 정렬하기
+2. Runnable로 코드 블록 실행하기
+3. GUI 이벤트 처리하기
+
+### 공유 하고 싶은 내용
+
+Callable 과 Runnable 의 차이점
+
+**Runnable** 
+
+- 리턴값이 존재하지 않기 때문에 주로 공유객체를 사용할때 사용한다.
+- 편리하다.
+- 공유객체를 만들어야한다는 단점이 있다.
+- Exception 을 발생 시키지 않는다.
+
+**Callable**
+
+- 리턴값이 존재하기 때문에 공유 객체를 사용하지 않는다는 장점이 있다.
+- Runnable에 비해 복잡도가 높아 질 수 있다.
+- Exception 을 발생 시킬 수 있다.
+
+> Runnable 인터페이스 만으로 부족 한 점이 많아 Callable 을 도입.
+Java의 하위버전 호환성을 위해 추가 됨.
+> 
+
+**함수형 인터페이스**
+
+[Modern Java (Java 8) - 함수형 인터페이스](https://velog.io/@litien/Modern-Java-Java-8-%ED%95%A8%EC%88%98%ED%98%95-%EC%9D%B8%ED%84%B0%ED%8E%98%EC%9D%B4%EC%8A%A4)
