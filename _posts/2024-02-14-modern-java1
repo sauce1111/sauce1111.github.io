@@ -1,0 +1,248 @@
+
+# CHAPTER 1 자바 8,9,10,11 : 무슨 일이 일어나고 있는가?
+
+---
+
+- 자바의 역사를 통틀어 가장 큰 변화가 있었던 버전 : 자바 8
+    1.  멀티코어 CPU 같은 하드웨어적 변화가 자바 8 에 영향을 줌 : 이전까지의 대부분 자바 프로그램은 단일 코어를 사용함
+- 자바 8 의 새로운 기술
+    1. 스트림 API
+    2. 메소드에 코드를 전달하는 기법
+    3. 인터페이스의 디폴트 메서드
+
+## 자바 8 의 3가지 프로그래밍 개념
+
+---
+
+### 1. 스트림 처리 - 한번에 한 개씩 만들어 지는 연속적인 데이터 항목들의 모임
+
+- 아래 유닉스 명령어들을 파이프( | ) 로 조합하여 파이프라인을 구성 한 것 처럼 자바 8 에서는 java.util.stream 패키지에 추가 된 스트림 API 의 여러 메소드를 제공한다
+
+예제 1-1
+
+```bash
+cat file1 file2 | tr "[A-Z]" "[a-z]" | sort | tail -3
+```
+
+### 2. 동작 파라미터화로 메소드에 코드 전달하기
+
+> 위 유닉스 예제 코드 에서 sort 명령에 파라미터를 추가 하여 원하는 기준 (사용자 지정 기준) 으로 정렬하고 싶을 수 있다. 먼저 그 원하는 기준을 구하는 메소드1을 작성하여 메소드1 자체를 sort메소드의 인수로 전달 할 수 있다.
+> 
+
+### 3. 병렬성과 공유 가변 데이터
+
+> 스트림 메소드로 전달하는 코드 ① 와 다른 코드 ② 가 동시에 실행 할 때에도 안전하게 실행 될 수 있도록 (공유 가변 데이터에 접근 하지 않도록) 해야 한다. 예를 들어 ① 과 ② 가 공유된 변수나 객체를 동시에 바꾸려 해도 부작용이 일어나지 않도록 해야한다.
+> 
+
+## 자바 함수
+
+---
+
+> 프로그래밍 언어에서 함수란 ? 메소드, 특히 정적 메소드와 같은 의미로 사용된다.
+이에 더해 자바에서 함수란 ? 수학적인 함수 처럼 사용되며 부작용을 일으키지 않는 함수를 의미 한다.
+> 
+
+---
+
+> 자바 8 에서는 함수를 새로운 값의 형식으로 추가 했다.
+    → "함수를 값 처럼 취급 하겠다" 로 받아 들일 수 있다.
+> 
+
+### 이급 시민을 일급 시민으로
+
+- 프로그래밍의 핵심은 값을 바꾸는 것이다.
+- 값 (일급 시민) - 기본값 (int, double ...), String, new Integer(1111), new HashMap<Integer, String>(100), 배열 등등
+- 자바의 메소드 또는 클래스같은 다양한 구조체 (이급 시민)
+
+→ 자바 8 에서는 이급 시민을 일급 시민으로 바꿀 수 있는 기능을 추가 했다.
+
+### 메소드와 람다를 일급 시민으로
+
+---
+
+**`메소드 참조 - 자바 8 의 새로운 기능, 기호 "::" 사용`**
+
+예제 1-2
+
+```basic
+File[] hiddenFiles = new File(".").listFiles(new FileFilter() {
+	public boolean accept(File file) {
+		return file.isHidden();
+	}
+});
+```
+
+위 코드를 자바 8에서는 아래 와 같이 구현 할 수 있다.
+
+예제 1-3
+
+```basic
+File[] hiddenFiles = new File (".").listFiles(File::isHidden);
+```
+
+File 클래스에 이미 isHidden 이라는 메소드가 있는데 굳이 new FileFilter (**객체 참조**) 로 복잡하게 감싸 인스턴스화 해야 했으나 자바 8 에서는 보시다시피 **메소드 참조** 를 사용하여 메소드를 일급 값으로 전달 할 수 있다.
+
+### 람다 - 익명 함수
+
+---
+
+> 자바 8 에서는 메소드 뿐만 아니라 **람다를 포함하여 함수도 값으로 취급 할 수 있다**.
+> 
+
+예제 1-4
+
+```basic
+(int x) -> x + 1
+```
+
+예제 1-4 처럼 x 라는 인수로 호출 시 x + 1 을 반환 하도록 구현 할 수 있다.
+
+예제 1-3 과 같이 클래스를 생성 > 클래스 내부에 x + 1 의 동작을 하는 메소드를 구현 > 클래스::메소드 의 형식으로
+
+메소드 참조를 할 수 도 있지만, 구현된 클래스나 메소드가 없을 경우 람다 문법으로 간결하게 코드를 구현할 수 있다.
+
+### 메소드 참조 - 총 정리 예제
+
+예제 1-5
+
+```basic
+public static List<Apple> filterGreenApples(List<Apple> inventory) {
+	  List<Apple> result = new ArrayList<>();
+	  for (Apple apple : inventory) {
+	      if (**"green".equals(apple.getColor())**) {
+	          result.add(apple);
+	      }
+	  }
+	  return result;
+}
+```
+
+기존의 자바에서는 위 예제의 붉은색 으로 표시 된 조건을 무게가 150 보다 큰 것으로 변경 하고 싶을 시
+
+아래와 같이 메소드의 모든 코드를 COPY & PASTE 후 조건 부분만 변경하는 비효율적 이고 더 많은 중복 코드가 
+
+발생 하며 코드의 오류가 있을 시 복붙한 모든 코드를 고쳐야 하는 경우가 발생 한다.
+
+예제 1-6
+
+```basic
+public static List<Apple> filterHeavyApples(List<Apple> inventory) {
+    List<Apple> result = new ArrayList<>();
+    for (Apple apple : inventory) {
+        if (**apple.getWeight() > 150**) {
+            result.add(apple);
+        }
+    }
+    return result;
+}
+```
+
+자바 8에서는 아래 와 같이 구현 할 수 있다.
+
+예제 1-7
+
+```basic
+// getcolor 가 "green" 인 apple 만 반환한다.
+public static boolean isGreenApple(Apple apple) {
+    return "green".equals(apple.getColor());
+}
+
+// getWeight 가 150 보다 큰 apple 만 반환한다.
+public static boolean isHeavyApple(Apple apple) {
+    return apple.getWeight() > 150;
+}
+
+// 보통 java.util.function 패키지에서 import 한다.
+public interface Predicate<T> {
+		boolean test(T t);
+}
+
+public static List<Apple> filterApples(List<Apple> inventory,
+				Predicate<Apple> p) {
+    List<Apple> result = new ArrayList<>();
+    for (Apple apple : inventory) {
+        if (p.test(apple)) {
+            result.add(apple);
+        }
+    }
+    return result;
+}
+```
+
+위 처럼 구현한 메소드를 다음과 같이 호출 할 수 있다.
+
+예제 1-8
+
+```basic
+filterApples(inventory, Apple::isGreenApple);
+
+filterApples(inventory, Apple::isHeavyApple);
+```
+
+또한 예제 1-7, 8 의 코드를 아래와 같이 람다로 구현 할 수 있다.
+
+```basic
+// getcolor 가 "green" 인 apple 만 반환한다.
+filterApples(inventory, (Apple a) -> GREEN.equals(a.getColor()));
+
+// getWeight 가 150 보다 큰 apple 만 반환한다.
+filterApples(inventory, (Apple a) -> a.getWeight() > 150);
+
+// getcolor 가 "green" 이고 getWeight 가 100 보다 작은 apple 을 반환한다.
+filterApples(inventory, (Apple a) -> GREEN.equals(a.getColor()) 
+		|| a.getWeight() < 100);
+
+```
+
+## 스트림
+
+---
+
+> 거의 모든 자바 애플리케이션은 **컬렉션을 생성 하고 활용** 한다.
+> 
+
+- 컬렉션 : for-each 를 통한 반복작업 (**외부 반복**)을 직접 처리
+- 스트림 : 루프를 신경 쓸 필요 없음, 라이브러리 내에서 처리 (내부 반복)
+
+위 두 가지로 대용량의 데이터를 처리 한다 가정 했을 경우 스트림은 자바 8의 특성(멀티 코어 CPU)를 활용하여 병렬로 작업을 수행 하여 빠르게 작업을 처리 할 수 있다.
+
+### 멀티스레딩은 어렵다
+
+    이전 자바 버전의 스레드 API로 멀티스레딩을 구현 하기는 쉽지 않다. 각각의 스레드가 동시에 공유된 데이터에     
+
+    접근하고 수정 • 갱신 하며 원치 않는 방식으로 동작 또는 결과를 가져 온다.
+
+자바 8 에서는 스트림 API 를 통해 아래 두 가지 문제를 모두 해결했다.
+
+1. 컬렉션 처리 중 모호함 과 반복 코드 문제
+2. 멀티코어 활용의 어려움
+
+## 디폴트 메소드 와 자바 모듈
+
+---
+
+> 자바 8 은 **인터페이스를 쉽게 바꿀 수 있도록** 해주는 디폴트 메소드를 지원한다.
+> 
+
+인터페이스에 새로운 메소드를 추가 할 경우 당연히도 구현 하는 모든 클래스에 추가된 메소드를 구현해야 한다.
+
+ex ) 이전 자바의 List 가 구현한 인터페이스 Collection 에는 stream 메소드가 없지만 추가 하고자 한다면
+
+모든 구현체에 stream 메소드의 추가가 불가피 하다.
+
+위 문제를 해결 하기 위해 자바 8의 디폴드 메소드를 사용 하면 된다.
+
+ex ) 자바 8 의 List 인터페이스에 다음과 같은 디폴트 메소드가 추가 되었기에 list.sort() 가 가능하다.
+
+```basic
+**default** void sort(Comparator<? super E> c) {
+		Collections.sort(this, c);
+}
+```
+
+## 함수형 프로그래밍에서 가져온 다른 유용한 아이디어
+
+---
+
+- 일반적인 함수형 언어가 프로그래밍을 돕는 장치 중 null 회피 기법을 자바 8 에서도 **Optional<T> 클래스**를 통해 제공 한다.
+- if-then-else 또는 switch 문 과 같은 구조적 패턴 매칭 기법을 제공 한다. (아직 완벽 지원상태는 아님.)
